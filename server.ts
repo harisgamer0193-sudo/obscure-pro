@@ -41,18 +41,39 @@ async function startServer() {
       STRICT CONSTRAINT: No artistic buzzwords. No "cinematic," "masterpiece," or "ethereal." Use only raw, physical, physical, unpolished descriptive language. 
       If you see a character, describe their pose and angle relative to the lens with surgical precision.`;
 
-      const response = await genAI.models.generateContent({
-        model: "gemini-3-flash-preview",
-        contents: [
-          { text: prompt },
-          {
-            inlineData: {
-              data: image,
-              mimeType: mimeType
+      let response;
+      try {
+        response = await genAI.models.generateContent({
+          model: "gemini-3-flash-preview",
+          contents: [
+            { text: prompt },
+            {
+              inlineData: {
+                data: image,
+                mimeType: mimeType
+              }
             }
-          }
-        ]
-      });
+          ]
+        });
+      } catch (error: any) {
+        // Fallback to gemini-1.5-flash if 503 or gemini-3 is unavailable
+        if (error?.status === 503 || error?.message?.includes('503') || error?.message?.includes('high demand')) {
+          console.warn("Primary model busy, falling back to gemini-1.5-flash");
+          const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+          const result = await model.generateContent([
+            prompt,
+            {
+              inlineData: {
+                data: image,
+                mimeType: mimeType
+              }
+            }
+          ]);
+          const fallbackResponse = await result.response;
+          return res.json({ description: fallbackResponse.text() });
+        }
+        throw error;
+      }
 
       res.json({ description: response.text });
     } catch (error) {
