@@ -7,8 +7,14 @@ export async function describeImage(base64Data: string, mimeType: string): Promi
   });
 
   if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error || 'Failed to analyze image');
+    let errorMessage = 'Failed to analyze image';
+    try {
+      const errorData = await response.json();
+      errorMessage = errorData.error || errorMessage;
+    } catch {
+      errorMessage = `Server Error: ${response.status} ${response.statusText}`;
+    }
+    throw new Error(errorMessage);
   }
 
   const data = await response.json();

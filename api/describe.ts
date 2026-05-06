@@ -8,10 +8,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     const { image, mimeType } = req.body;
+    
+    if (!image) {
+      return res.status(400).json({ error: "Image data is missing from request body." });
+    }
+
     const apiKey = process.env.GEMINI_API_KEY;
 
     if (!apiKey) {
-      return res.status(500).json({ error: "GEMINI_API_KEY is not configured in Vercel environment variables." });
+      return res.status(500).json({ error: "GEMINI_API_KEY is not configured in Vercel. Please add it to your Project Settings -> Environment Variables." });
     }
 
     const genAI = new GoogleGenAI({ apiKey });
@@ -45,7 +50,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const response = await result.response;
     res.json({ description: response.text() });
   } catch (error) {
-    console.error("API Error:", error);
-    res.status(500).json({ error: "Failed to process image analysis." });
+    console.error("Vercel API Error:", error);
+    const errorMessage = error instanceof Error ? error.message : "Failed to process image analysis.";
+    res.status(500).json({ error: errorMessage });
   }
 }

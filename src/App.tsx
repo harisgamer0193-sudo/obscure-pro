@@ -9,6 +9,7 @@ import { Sparkles, ArrowRight, Settings2, Hash } from 'lucide-react';
 import { UploadZone } from './components/UploadZone.tsx';
 import { PromptResult } from './components/PromptResult.tsx';
 import { describeImage, buildPrompt } from './lib/gemini.ts';
+import { resizeImageIfNeeded } from './lib/imageUtils.ts';
 
 export default function App() {
   const [loading, setLoading] = useState(false);
@@ -21,11 +22,12 @@ export default function App() {
     setLoading(true);
     setFinalPrompt('');
     try {
-      const desc = await describeImage(base64Data, mimeType);
+      const optimizedData = await resizeImageIfNeeded(base64Data, mimeType);
+      const desc = await describeImage(optimizedData, mimeType);
       setDescription(desc);
     } catch (error) {
       console.error('Analysis failed:', error);
-      setDescription("Internal analysis bypass. Please provide manual parameters.");
+      setDescription(error instanceof Error ? `Protocol Error: ${error.message}` : "Internal analysis bypass. Please provide manual parameters.");
     } finally {
       setLoading(false);
     }
