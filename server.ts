@@ -24,7 +24,7 @@ async function startServer() {
         return res.status(500).json({ error: "GEMINI_API_KEY is not configured on the server." });
       }
 
-      const genAI = new GoogleGenAI(apiKey);
+      const genAI = new GoogleGenAI({ apiKey });
       const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
       const prompt = `Perform an EXHAUSTIVE, FORENSIC-LEVEL, ULTRA-LONG investigation of this image for a RAW photographic reconstruction. 
