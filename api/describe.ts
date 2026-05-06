@@ -20,8 +20,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     const genAI = new GoogleGenAI({ apiKey });
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-
+    
     const prompt = `Perform an EXHAUSTIVE, FORENSIC-LEVEL, ULTRA-LONG investigation of this image for a RAW photographic reconstruction. 
     You are an expert at identifying the "boring reality" of a scene. 
     The resulting text must be a massive, dense block of descriptive data, exceeding 500 words (aim for 1500-2000 characters).
@@ -37,18 +36,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     STRICT CONSTRAINT: No artistic buzzwords. No "cinematic," "masterpiece," or "ethereal." Use only raw, physical, physical, unpolished descriptive language. 
     If you see a character, describe their pose and angle relative to the lens with surgical precision.`;
 
-    const result = await model.generateContent([
-      prompt,
-      {
-        inlineData: {
-          data: image,
-          mimeType: mimeType
+    const response = await genAI.models.generateContent({
+      model: "gemini-3-flash-preview",
+      contents: [
+        { text: prompt },
+        {
+          inlineData: {
+            data: image,
+            mimeType: mimeType
+          }
         }
-      }
-    ]);
+      ]
+    });
 
-    const response = await result.response;
-    res.json({ description: response.text() });
+    res.json({ description: response.text });
   } catch (error) {
     console.error("Vercel API Error:", error);
     const errorMessage = error instanceof Error ? error.message : "Failed to process image analysis.";
